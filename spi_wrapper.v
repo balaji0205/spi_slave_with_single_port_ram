@@ -1,11 +1,44 @@
-module spi_wrapper (mosi, miso,ss_n, clk, rst_n);
-input mosi, ss_n, clk, rst_n;
-output miso;
-
-wire [9:0]rx_data_w;
-wire rx_valid_w, tx_valid_w;
-wire [7:0]tx_data_w;
-
-spi_slave spi(.mosi(mosi), .miso(miso), .ss_n(ss_n), .rx_data(rx_data_w), .rx_valid(rx_valid_w), .tx_data(tx_data_w), .tx_valid(tx_valid_w), .clk(clk), .rst_n(rst_n) );
-ram mem(.din(rx_data_w), .clk(clk), .rst_n(rst_n), .rx_valid(rx_valid_w), .dout(tx_data_w), .tx_valid(tx_valid_w) );
+module SPI_Top_module(
+/* ---------------------- Input Ports ---------------------- */
+/* Input from Master (Master-out-Slave-in) */
+input MOSI,
+/* Activating the slave communication */
+input SS_n,
+/* Clock Signal */
+input clk,
+/* Active Low asynchronous reset */
+input a_rst_n,
+/* ---------------------- Output Ports ---------------------- */
+/* Input to Master (Master-in-Slave-out) */
+output MISO
+);
+/* --------------------- Internal Signals ------------------- */
+/* Receiving Data to RAM */
+wire [9:0] rx_data;
+wire rx_valid;
+/* Transmitting Data to RAM */
+wire [7:0] tx_data;
+wire tx_valid;
+/* ------------------- Modules Instantiation ---------------- */
+/* SPI Slave Module */
+SPI_Slave_Interface SPI (
+.MISO(MISO),
+.MOSI(MOSI),
+.SS_n(SS_n),
+.clk(clk),
+.a_rst_n(a_rst_n),
+.rx_data(rx_data),
+.rx_valid(rx_valid),
+.tx_data(tx_data),
+.tx_valid(tx_valid)
+);
+/* RAM Module */
+Single_Port_Synchronous_RAM RAM(
+.clk(clk),
+.a_rst_n(a_rst_n),
+.din(rx_data),
+.rx_valid(rx_valid),
+.dout(tx_data),
+.tx_valid(tx_valid)
+);
 endmodule
